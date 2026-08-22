@@ -273,7 +273,7 @@ if (!empty($jobs)) {
 
             <div class="table-container">
 
-                <table class="data-table">
+                <table class="data-table jobs-table">
 
                     <thead>
 
@@ -362,7 +362,7 @@ if (!empty($jobs)) {
 
                         <tr>
 
-                            <td>
+                            <td data-label="Job No.">
 
                                 <a
                                     class="job-link"
@@ -378,61 +378,61 @@ if (!empty($jobs)) {
                             </td>
 
 
-                            <td>
+                            <td data-label="Purchaser">
                                 <?= htmlspecialchars(
                                     $data['purchaserName'] ?? ''
                                 ) ?>
                             </td>
 
 
-                            <td>
+                            <td data-label="kVA">
                                 <?= htmlspecialchars(
                                     $data['kva'] ?? ''
                                 ) ?>
                             </td>
 
 
-                            <td>
+                            <td data-label="Phase">
                                 <?= htmlspecialchars(
                                     $data['phases'] ?? ''
                                 ) ?>
                             </td>
 
 
-                            <td>
+                            <td data-label="HV Voltage">
                                 <?= htmlspecialchars(
                                     $data['hvVoltage'] ?? ''
                                 ) ?>
                             </td>
 
 
-                            <td>
+                            <td data-label="LV Voltage">
                                 <?= htmlspecialchars(
                                     $data['lvVoltage'] ?? ''
                                 ) ?>
                             </td>
 
 
-                            <td>
+                            <td data-label="Vector Group">
                                 <?= htmlspecialchars(
                                     $data['vectorGroup'] ?? ''
                                 ) ?>
                             </td>
 
 
-                            <td>
+                            <td data-label="Quantity">
                                 <?= htmlspecialchars(
                                     $data['quantity'] ?? ''
                                 ) ?>
                             </td>
 
 
-                            <td>
+                            <td data-label="Job Type">
                                 <?= htmlspecialchars(
                                     $data['jobType'] ?? ''
                                 ) ?>
                             </td>
-							<td>
+							<td data-label="Drawings">
 
     <?php if (!empty($drawingCodes)): ?>
 

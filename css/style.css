@@ -1204,6 +1204,74 @@ textarea {
     }
 }
 
+@media (max-width: 700px) {
+
+    .table-container,
+    .status-table-container {
+        overflow-x: visible;
+    }
+
+    .jobs-table,
+    .jobs-table tbody,
+    .jobs-table tr,
+    .jobs-table td,
+    .status-table,
+    .status-table tbody,
+    .status-table tr,
+    .status-table td {
+        display: block;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .jobs-table thead,
+    .status-table thead {
+        display: none;
+    }
+
+    .jobs-table tr,
+    .status-table tr {
+        margin-bottom: 12px;
+        border: 1px solid #d9dee4;
+        border-radius: 6px;
+        background: #fff;
+        overflow: hidden;
+    }
+
+    .jobs-table td,
+    .status-table td {
+        display: grid;
+        width: 100% !important;
+        grid-template-columns: minmax(105px, 38%) minmax(0, 1fr);
+        gap: 10px;
+        align-items: start;
+        padding: 8px 10px !important;
+        border-bottom: 1px solid #e5e9ee;
+    }
+
+    .jobs-table td:last-child,
+    .status-table td:last-child {
+        border-bottom: none;
+    }
+
+    .jobs-table td::before,
+    .status-table td::before {
+        content: attr(data-label);
+        color: #555;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .status-table .status-process-cell {
+        max-width: none;
+        min-width: 0;
+    }
+
+    .status-table .status-summary {
+        min-width: 0;
+    }
+}
+
 @media (max-width: 600px) {
 
     .container,

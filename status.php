@@ -510,7 +510,7 @@ require 'includes/header.php';
                                     : ''
                                 ?>
                             >
-                                Recent Updates (<?= $recentDays ?> Days)
+                                Recent (<?= $recentDays ?> Days)
                             </option>
 
                             <option
@@ -698,7 +698,7 @@ require 'includes/header.php';
 >
 
 
-                            <td>
+                            <td data-label="Job No.">
 
                                 <a
                                     class="job-link"
@@ -716,7 +716,7 @@ require 'includes/header.php';
                             </td>
 
 
-                            <td>
+                            <td data-label="Purchaser">
 
                                 <?= htmlspecialchars(
                                     $jobData[
@@ -727,7 +727,7 @@ require 'includes/header.php';
                             </td>
 
 
-                            <td>
+                            <td data-label="kVA">
 
                                 <?= htmlspecialchars(
                                     $jobData[
@@ -746,6 +746,13 @@ require 'includes/header.php';
 
                                 <td
                                     class="status-process-cell"
+                                    data-label="<?= htmlspecialchars(
+                                        processName(
+                                            $processCode,
+                                            $processDefinitions
+                                        ),
+                                        ENT_QUOTES
+                                    ) ?>"
                                 >
 
 
