@@ -122,6 +122,62 @@ if (
 
 /*
 |--------------------------------------------------------------------------
+| Edit Access Policy
+|--------------------------------------------------------------------------
+|
+| Regular users may correct the current day's status and next-day plan.
+| Administrators may also correct entries from the preceding seven days.
+| The next-day plan is stored against the current progress date, so future
+| dates are always read-only.
+|
+*/
+
+$isAdmin =
+    strtolower(
+        $_SESSION['user']['role']
+        ?? ''
+    ) === 'admin';
+
+$today = date('Y-m-d');
+
+$adminEditStartDate =
+    date(
+        'Y-m-d',
+        strtotime('-7 days')
+    );
+
+$canEditProgress =
+    $progressDate === $today
+    ||
+    (
+        $isAdmin
+        &&
+        $progressDate >= $adminEditStartDate
+        &&
+        $progressDate <= $today
+    );
+
+
+$progressLockedMessage = '';
+
+if (!$canEditProgress) {
+
+    if ($progressDate > $today) {
+        $progressLockedMessage =
+            'Future dates are read-only. Record the next-day plan against today.';
+    } elseif ($isAdmin) {
+        $progressLockedMessage =
+            'Administrators can update entries only from the last seven days.';
+    } else {
+        $progressLockedMessage =
+            'Only today\'s entry can be updated. Historical corrections require an administrator.';
+    }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
 | Selected Main Activity
 |--------------------------------------------------------------------------
 |
@@ -164,6 +220,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ?? '';
 
     if ($action === 'save') {
+
+        if (!$canEditProgress) {
+            http_response_code(403);
+            exit($progressLockedMessage);
+        }
 
         $statusByItem =
             $_POST['status']
@@ -556,6 +617,59 @@ if (!empty($processItems)) {
 
 /*
 |--------------------------------------------------------------------------
+| Previous Day Plan Suggestions
+|--------------------------------------------------------------------------
+|
+| A plan recorded yesterday is offered as today's initial actual status when
+| no row exists for the selected day. It is only a form suggestion; no new
+| daily-status record is created until the user saves the form.
+|
+*/
+
+$previousDayPlans = [];
+
+if (!empty($processItems)) {
+
+    $previousProgressDate =
+        date(
+            'Y-m-d',
+            strtotime($progressDate . ' -1 day')
+        );
+
+    $previousItemIds =
+        array_map(
+            static function ($item) {
+                return (int)$item['id'];
+            },
+            $processItems
+        );
+
+    $previousPlaceholders = [];
+    $previousParams = [
+        ':previous_progress_date' => $previousProgressDate
+    ];
+
+    foreach ($previousItemIds as $index => $itemId) {
+        $key = ':previous_item' . $index;
+        $previousPlaceholders[] = $key;
+        $previousParams[$key] = $itemId;
+    }
+
+    $previousPlanStmt = $pdo->prepare("\n        SELECT\n            job_process_item_id,\n            planned_status_code\n        FROM job_process_daily_status\n        WHERE progress_date = :previous_progress_date\n          AND planned_status_code IS NOT NULL\n          AND job_process_item_id IN (\n              " . implode(',', $previousPlaceholders) . "\n          )\n    ");
+
+    $previousPlanStmt->execute($previousParams);
+
+    foreach ($previousPlanStmt->fetchAll() as $row) {
+        $previousDayPlans[
+            (int)$row['job_process_item_id']
+        ] = $row['planned_status_code'];
+    }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
 | Group Items By Process
 |--------------------------------------------------------------------------
 */
@@ -719,6 +833,7 @@ require 'includes/header.php';
                         value="<?= htmlspecialchars(
                             $progressDate
                         ) ?>"
+                        max="<?= htmlspecialchars($today) ?>"
                         onchange="this.form.submit()"
                     >
 
@@ -848,6 +963,15 @@ require 'includes/header.php';
             >
 
 
+            <?php if (!$canEditProgress): ?>
+
+                <div class="warning-box">
+                    <?= htmlspecialchars($progressLockedMessage) ?>
+                </div>
+
+            <?php endif; ?>
+
+
             <?php foreach (
                 $itemsByProcess
                 as $processCode => $items
@@ -939,6 +1063,22 @@ require 'includes/header.php';
         'planned_status_code'
     ] ?? '';
 
+                                $suggestedActualStatus = '';
+
+                                if (
+                                    $existing === null
+                                    &&
+                                    !empty($previousDayPlans[$itemId])
+                                ) {
+                                    $suggestedActualStatus =
+                                        $previousDayPlans[$itemId];
+                                }
+
+                                $displayStatus =
+                                    $existingStatus !== ''
+                                        ? $existingStatus
+                                        : $suggestedActualStatus;
+
                                 ?>
 
                                 <tr>
@@ -962,6 +1102,7 @@ require 'includes/header.php';
                                         <select
                                             name="status[<?= $itemId ?>]"
                                             class="form-control progress-status"
+                                            <?= !$canEditProgress ? 'disabled' : '' ?>
                                         >
 
                                             <option value="">
@@ -977,7 +1118,7 @@ require 'includes/header.php';
                                                     value="<?= htmlspecialchars(
                                                         $statusCode
                                                     ) ?>"
-                                                    <?= $existingStatus === $statusCode
+                                                    <?= $displayStatus === $statusCode
                                                         ? 'selected'
                                                         : ''
                                                     ?>
@@ -991,12 +1132,21 @@ require 'includes/header.php';
 
                                         </select>
 
+                                        <?php if ($suggestedActualStatus !== ''): ?>
+
+                                            <div class="small muted">
+                                                Suggested from the previous day’s plan.
+                                            </div>
+
+                                        <?php endif; ?>
+
                                     </td>
 									<td>
 
     <select
         name="planned_status[<?= $itemId ?>]"
         class="form-control progress-status"
+        <?= !$canEditProgress ? 'disabled' : '' ?>
     >
 
         <option value="">
@@ -1040,6 +1190,7 @@ require 'includes/header.php';
                                                 $existingRemarks
                                             ) ?>"
                                             placeholder="Optional"
+                                            <?= !$canEditProgress ? 'disabled' : '' ?>
                                         >
 
                                     </td>
@@ -1108,12 +1259,22 @@ require 'includes/header.php';
 
                 </div>
 
-                <button
-                    type="submit"
-                    class="button button-primary button-large"
-                >
-                    Save Daily Progress
-                </button>
+                <?php if ($canEditProgress): ?>
+
+                    <button
+                        type="submit"
+                        class="button button-primary button-large"
+                    >
+                        Save Daily Progress
+                    </button>
+
+                <?php else: ?>
+
+                    <span class="muted">
+                        This date is read-only.
+                    </span>
+
+                <?php endif; ?>
 
             </div>
 
