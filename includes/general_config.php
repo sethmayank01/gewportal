@@ -219,6 +219,51 @@ $processDefinitions = [
 
 /*
 |--------------------------------------------------------------------------
+| Default Production Activities
+|--------------------------------------------------------------------------
+|
+| These are copied into job_process_items the first time Process Setup is
+| opened for a job with no process items. Existing job-specific activities
+| are never overwritten or supplemented automatically.
+|
+*/
+
+$defaultProcessItems = [
+
+    ['process_code' => 'CORE',        'item_code' => 'CORE',        'item_name' => 'Core Assembly'],
+
+    ['process_code' => 'WINDING',     'item_code' => 'LV1',         'item_name' => 'LV Winding 1'],
+    ['process_code' => 'WINDING',     'item_code' => 'LV2',         'item_name' => 'LV Winding 2'],
+    ['process_code' => 'WINDING',     'item_code' => 'LV3',         'item_name' => 'LV Winding 3'],
+    ['process_code' => 'WINDING',     'item_code' => 'HV1',         'item_name' => 'HV Winding 1'],
+    ['process_code' => 'WINDING',     'item_code' => 'HV2',         'item_name' => 'HV Winding 2'],
+    ['process_code' => 'WINDING',     'item_code' => 'HV3',         'item_name' => 'HV Winding 3'],
+
+    ['process_code' => 'ASSEMBLY',    'item_code' => 'LVCA',        'item_name' => 'LV Coil Assembly'],
+    ['process_code' => 'ASSEMBLY',    'item_code' => 'HVCA',        'item_name' => 'HV Coil Assembly'],
+    ['process_code' => 'ASSEMBLY',    'item_code' => 'YOKEFILLING', 'item_name' => 'Yoke Filling'],
+    ['process_code' => 'ASSEMBLY',    'item_code' => 'LVCONN',      'item_name' => 'LV Connection'],
+    ['process_code' => 'ASSEMBLY',    'item_code' => 'HVCONN',      'item_name' => 'HV Connection'],
+
+    ['process_code' => 'TANKING',     'item_code' => 'TANKING',    'item_name' => 'Job Tanking'],
+    ['process_code' => 'TANKING',     'item_code' => 'PRESSURE',   'item_name' => 'Tank Pressure'],
+    ['process_code' => 'TANKING',     'item_code' => 'PIPELINE',   'item_name' => 'Pipe Line Connection'],
+
+    ['process_code' => 'TESTING',     'item_code' => '2KV',        'item_name' => '2 KV Testing'],
+    ['process_code' => 'TESTING',     'item_code' => 'CCALV',      'item_name' => 'CCA LV Testing'],
+    ['process_code' => 'TESTING',     'item_code' => 'FINALTEST',  'item_name' => 'Final Testing'],
+
+    ['process_code' => 'FABRICATION', 'item_code' => 'YOKECLAMP',  'item_name' => 'Yoke Clamp'],
+    ['process_code' => 'FABRICATION', 'item_code' => 'MARKING',    'item_name' => 'Design Marking'],
+    ['process_code' => 'FABRICATION', 'item_code' => 'CUTTING',    'item_name' => 'Material Cutting'],
+    ['process_code' => 'FABRICATION', 'item_code' => 'ASSEMBLY',   'item_name' => 'Parts Assembly'],
+    ['process_code' => 'FABRICATION', 'item_code' => 'WELDING',    'item_name' => 'Final Welding'],
+
+];
+
+
+/*
+|--------------------------------------------------------------------------
 | Production Statuses
 |--------------------------------------------------------------------------
 */
@@ -255,6 +300,10 @@ $processStatuses = [
 
     'UNDER_PROCESS' => [
         'name' => 'Under Process'
+    ],
+
+    'HOLD' => [
+        'name' => 'Hold'
     ],
 
     'COMPLETE' => [

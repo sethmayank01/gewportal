@@ -65,6 +65,72 @@ $currentUser =
 
 /*
 |--------------------------------------------------------------------------
+| Seed Default Process Activities
+|--------------------------------------------------------------------------
+|
+| Jobs are supplied by the jobs table rather than created in this page. On
+| the first Process Setup visit for a job with no activities, create the
+| standard activity list. A lock on the job row prevents two simultaneous
+| first visits from creating duplicate rows.
+|
+*/
+
+try {
+
+    $pdo->beginTransaction();
+
+    $lockJob = $pdo->prepare("\n        SELECT serial_no\n        FROM jobs\n        WHERE serial_no = :serial_no\n        FOR UPDATE\n    ");
+
+    $lockJob->execute([
+        'serial_no' => $jobNo
+    ]);
+
+    $existingCount = $pdo->prepare("\n        SELECT COUNT(*)\n        FROM job_process_items\n        WHERE job_serial_no = :job_serial_no\n    ");
+
+    $existingCount->execute([
+        'job_serial_no' => $jobNo
+    ]);
+
+    if ((int)$existingCount->fetchColumn() === 0) {
+
+        $insertDefault = $pdo->prepare("\n            INSERT INTO job_process_items\n            (\n                job_serial_no,\n                process_code,\n                item_code,\n                item_name,\n                active,\n                created_by,\n                created_at,\n                updated_by,\n                updated_at\n            )\n            VALUES\n            (\n                :job_serial_no,\n                :process_code,\n                :item_code,\n                :item_name,\n                TRUE,\n                :created_by,\n                CURRENT_TIMESTAMP,\n                :updated_by,\n                CURRENT_TIMESTAMP\n            )\n        ");
+
+        foreach ($defaultProcessItems as $defaultItem) {
+            $insertDefault->execute([
+                'job_serial_no' => $jobNo,
+                'process_code'  => $defaultItem['process_code'],
+                'item_code'     => $defaultItem['item_code'],
+                'item_name'     => $defaultItem['item_name'],
+                'created_by'    => $currentUser,
+                'updated_by'    => $currentUser
+            ]);
+        }
+
+    }
+
+    $pdo->commit();
+
+} catch (Throwable $e) {
+
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+
+    error_log(
+        'Unable to seed default process activities for job '
+        . $jobNo
+        . ': '
+        . $e->getMessage()
+    );
+
+    http_response_code(500);
+    exit('Unable to initialize the default process activities.');
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
 | Process Definitions
 |--------------------------------------------------------------------------
 |
