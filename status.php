@@ -16,16 +16,26 @@ require 'includes/general_config.php';
 | Job Type Filter
 |--------------------------------------------------------------------------
 |
-| TRFD = New Transformer
-| TRFR = Repair
-| ALL  = All Jobs
+| RECENT = Recently updated New Transformer and Repair jobs
+| TRFD   = New Transformer
+| TRFR   = Repair
+| ALL    = All Jobs
 |
 */
 
-$jobType = $_GET['type'] ?? 'TRFD';
+$jobType = $_GET['type'] ?? 'RECENT';
 
-if (!in_array($jobType, ['TRFD', 'TRFR', 'ALL'], true)) {
-    $jobType = 'TRFD';
+if (!in_array($jobType, ['RECENT', 'TRFD', 'TRFR', 'ALL'], true)) {
+    $jobType = 'RECENT';
+}
+
+$recentDays = (int)(
+    $_GET['days']
+    ?? $recentStatusDays
+);
+
+if ($recentDays < 1 || $recentDays > 365) {
+    $recentDays = $recentStatusDays;
 }
 
 
@@ -39,7 +49,33 @@ if (!in_array($jobType, ['TRFD', 'TRFR', 'ALL'], true)) {
 $where = [];
 $params = [];
 
-if ($jobType === 'TRFD') {
+if ($jobType === 'RECENT') {
+
+    $where[] = "
+        (
+            j.serial_no LIKE 'TRFD%'
+            OR
+            j.serial_no LIKE 'TRFR%'
+        )
+    ";
+
+    $where[] = "
+        EXISTS
+        (
+            SELECT 1
+            FROM job_process_items recent_dpi
+            INNER JOIN job_process_daily_status recent_ds
+                ON recent_ds.job_process_item_id = recent_dpi.id
+            WHERE recent_dpi.job_serial_no = j.serial_no
+              AND recent_ds.updated_at >=
+                    CURRENT_TIMESTAMP - make_interval(days => :recent_days)
+        )
+    ";
+
+    $params['recent_days'] = $recentDays;
+
+}
+elseif ($jobType === 'TRFD') {
 
     $where[] = "j.serial_no LIKE 'TRFD%'";
 
@@ -366,6 +402,9 @@ function statusClass(
         case 'UNDER_PROCESS':
             return 'status-info';
 
+        case 'HOLD':
+            return 'status-warning';
+
         case 'MATERIAL_AVAILABLE':
             return 'status-success';
 
@@ -465,6 +504,16 @@ require 'includes/header.php';
                         >
 
                             <option
+                                value="RECENT"
+                                <?= $jobType === 'RECENT'
+                                    ? 'selected'
+                                    : ''
+                                ?>
+                            >
+                                Recent Updates (<?= $recentDays ?> Days)
+                            </option>
+
+                            <option
                                 value="TRFD"
                                 <?= $jobType === 'TRFD'
                                     ? 'selected'
@@ -497,6 +546,29 @@ require 'includes/header.php';
                             </option>
 
                         </select>
+
+                    </div>
+
+
+                    <div>
+
+                        <label
+                            class="form-label"
+                            for="recentDays"
+                        >
+                            Updated within
+                        </label>
+
+                        <input
+                            type="number"
+                            id="recentDays"
+                            name="days"
+                            class="form-control status-filter-select"
+                            min="1"
+                            max="365"
+                            value="<?= $recentDays ?>"
+                            onchange="this.form.submit()"
+                        >
 
                     </div>
 

@@ -312,3 +312,16 @@ $processStatuses = [
 
 ];
 
+
+/*
+|--------------------------------------------------------------------------
+| Production Status Defaults
+|--------------------------------------------------------------------------
+|
+| The Production Status page opens with jobs that have had at least one
+| process activity updated in this many days.
+|
+*/
+
+$recentStatusDays = 10;
+

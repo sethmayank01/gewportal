@@ -237,7 +237,7 @@ if (!empty($jobs)) {
 
 
         <a
-            href="status.php?type=<?= urlencode($jobType) ?>"
+            href="status.php"
             class="button button-primary"
         >
             Production Status →
