@@ -735,35 +735,28 @@ $relativeFilePath =
 
 /*
 |--------------------------------------------------------------------------
-| Replace Existing Physical File
+| Upload To A Temporary File First
 |--------------------------------------------------------------------------
+|
+| Never delete or overwrite the current document before the new upload has
+| been safely written. The temporary file is created in the same directory
+| so it can be renamed atomically when the replacement is activated.
+|
 */
 
-if (
-    $existing
-    &&
-    is_file($physicalFilePath)
-) {
+$temporaryFilePath =
+    $physicalFilePath
+    . '.upload-'
+    . bin2hex(random_bytes(8));
 
-    if (
-        !unlink($physicalFilePath)
-    ) {
-
-        http_response_code(500);
-
-        exit(
-            'Could not replace the existing inspection document.'
-        );
-
-    }
-
-}
-
+$backupFilePath = null;
+$oldPhysicalPath = null;
+$newFileActivated = false;
 
 if (
     !move_uploaded_file(
         $file['tmp_name'],
-        $physicalFilePath
+        $temporaryFilePath
     )
 ) {
 
@@ -772,6 +765,27 @@ if (
     exit(
         'Could not save the uploaded file on the server.'
     );
+
+}
+
+
+if (
+    $existing
+    &&
+    !empty($existing['file_path'])
+) {
+
+    $oldRelativePath =
+        str_replace(
+            ['/', '\\'],
+            DIRECTORY_SEPARATOR,
+            $existing['file_path']
+        );
+
+    $oldPhysicalPath =
+        $uploadBasePath
+        . DIRECTORY_SEPARATOR
+        . $oldRelativePath;
 
 }
 
@@ -793,6 +807,51 @@ $userName =
 */
 
 try {
+
+    /*
+    |----------------------------------------------------------------------
+    | Activate The New File
+    |----------------------------------------------------------------------
+    |
+    | When the old and new paths are identical, move the old file aside
+    | first. If anything after this point fails, the catch block restores it.
+    |
+    */
+
+    if (
+        $oldPhysicalPath !== null
+        &&
+        is_file($oldPhysicalPath)
+        &&
+        strcasecmp($oldPhysicalPath, $physicalFilePath) === 0
+    ) {
+
+        $backupFilePath =
+            $oldPhysicalPath
+            . '.previous-'
+            . bin2hex(random_bytes(8));
+
+        if (!rename($oldPhysicalPath, $backupFilePath)) {
+            throw new RuntimeException(
+                'Could not prepare the existing inspection document for replacement.'
+            );
+        }
+
+    } elseif (is_file($physicalFilePath)) {
+
+        throw new RuntimeException(
+            'A conflicting inspection document already exists on the server.'
+        );
+
+    }
+
+    if (!rename($temporaryFilePath, $physicalFilePath)) {
+        throw new RuntimeException(
+            'Could not activate the new inspection document.'
+        );
+    }
+
+    $newFileActivated = true;
 
     $pdo->beginTransaction();
 
@@ -916,22 +975,16 @@ try {
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | Remove Newly Uploaded File If DB Update Failed
-    |--------------------------------------------------------------------------
-    */
+    if ($newFileActivated && is_file($physicalFilePath)) {
+        @unlink($physicalFilePath);
+    }
 
-    if (
-        is_file(
-            $physicalFilePath
-        )
-    ) {
+    if ($backupFilePath !== null && is_file($backupFilePath)) {
+        @rename($backupFilePath, $oldPhysicalPath);
+    }
 
-        @unlink(
-            $physicalFilePath
-        );
-
+    if (is_file($temporaryFilePath)) {
+        @unlink($temporaryFilePath);
     }
 
 
@@ -949,56 +1002,20 @@ try {
 
 /*
 |--------------------------------------------------------------------------
-| Remove Previous Physical File After Successful Replacement
+| Remove The Previous File Only After A Successful Database Commit
 |--------------------------------------------------------------------------
 */
 
-if (
-    $existing
+if ($backupFilePath !== null && is_file($backupFilePath)) {
+    @unlink($backupFilePath);
+} elseif (
+    $oldPhysicalPath !== null
     &&
-    !empty(
-        $existing['file_path']
-    )
+    is_file($oldPhysicalPath)
+    &&
+    strcasecmp($oldPhysicalPath, $physicalFilePath) !== 0
 ) {
-
-    $oldRelativePath =
-        str_replace(
-            ['/', '\\'],
-            DIRECTORY_SEPARATOR,
-            $existing['file_path']
-        );
-
-
-    $oldPhysicalPath =
-        $uploadBasePath
-        . DIRECTORY_SEPARATOR
-        . $oldRelativePath;
-
-
-    /*
-    | Do not delete the new file if paths somehow match.
-    */
-
-    if (
-        realpath($oldPhysicalPath)
-        !==
-        realpath($physicalFilePath)
-    ) {
-
-        if (
-            is_file(
-                $oldPhysicalPath
-            )
-        ) {
-
-            @unlink(
-                $oldPhysicalPath
-            );
-
-        }
-
-    }
-
+    @unlink($oldPhysicalPath);
 }
 
 
