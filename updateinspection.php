@@ -8,6 +8,7 @@ if (!isset($_SESSION['user'])) {
 }
 
 require 'db.php';
+require_once 'includes/mailer.php';
 
 
 /*
@@ -960,7 +961,36 @@ try {
 
 
     $pdo->commit();
+	
+	/*
+|--------------------------------------------------------------------------
+| Send Inspection Document Notification
+|--------------------------------------------------------------------------
+*/
 
+try {
+
+    sendInspectionNotification(
+        $pdo,
+        $jobNo,
+        $category,
+        $mode
+    );
+
+}
+catch (Throwable $mailError) {
+
+    /*
+     * Inspection upload must remain successful
+     * even if email sending fails.
+     */
+
+    error_log(
+        'Inspection notification email failed: '
+        . $mailError->getMessage()
+    );
+
+}
 
 } catch (
     Throwable $e

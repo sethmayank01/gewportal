@@ -190,10 +190,6 @@ $processDefinitions = [
         'name' => 'Winding'
     ],
 
-    'INSULATION' => [
-        'name' => 'Insulation'
-    ],
-
     'ASSEMBLY' => [
         'name' => 'Assembly'
     ],
@@ -238,7 +234,7 @@ $defaultProcessItems = [
     ['process_code' => 'WINDING',     'item_code' => 'HV1',         'item_name' => 'HV Winding 1'],
     ['process_code' => 'WINDING',     'item_code' => 'HV2',         'item_name' => 'HV Winding 2'],
     ['process_code' => 'WINDING',     'item_code' => 'HV3',         'item_name' => 'HV Winding 3'],
-
+	
     ['process_code' => 'ASSEMBLY',    'item_code' => 'LVCA',        'item_name' => 'LV Coil Assembly'],
     ['process_code' => 'ASSEMBLY',    'item_code' => 'HVCA',        'item_name' => 'HV Coil Assembly'],
     ['process_code' => 'ASSEMBLY',    'item_code' => 'YOKEFILLING', 'item_name' => 'Yoke Filling'],
@@ -258,6 +254,23 @@ $defaultProcessItems = [
     ['process_code' => 'FABRICATION', 'item_code' => 'CUTTING',    'item_name' => 'Material Cutting'],
     ['process_code' => 'FABRICATION', 'item_code' => 'ASSEMBLY',   'item_name' => 'Parts Assembly'],
     ['process_code' => 'FABRICATION', 'item_code' => 'WELDING',    'item_name' => 'Final Welding'],
+	['process_code' => 'FABRICATION', 'item_code' => 'CABLEBOX',   'item_name' => 'Cable Box Fabrication'],
+	['process_code' => 'FABRICATION', 'item_code' => 'EXPLOSIONVENT',   'item_name' => 'Explosion Vent'],
+	
+	['process_code' => 'PAINTING', 'item_code' => 'YOKECLAMPCLEANING',  'item_name' => 'Yoke Clamp Cleaning'],
+    ['process_code' => 'PAINTING', 'item_code' => 'TANKCLEANING',    'item_name' => 'Tank Cleaning'],
+    ['process_code' => 'PAINTING', 'item_code' => 'CABLEBOXCLEANING',    'item_name' => 'Cable Box Cleaning'],
+    ['process_code' => 'PAINTING', 'item_code' => 'EXPLOSIONVENTCLEANING',   'item_name' => 'Explosion Vent Cleaning'],
+	['process_code' => 'PAINTING', 'item_code' => 'YOKECLAMPHOTOIL',  'item_name' => 'Yoke Clamp Hot Oil '],
+    ['process_code' => 'PAINTING', 'item_code' => 'TANKPRIMER',    'item_name' => 'Tank Primer'],
+    ['process_code' => 'PAINTING', 'item_code' => 'CABLEBOXPRIMER',    'item_name' => 'Cable Box Primer'],
+    ['process_code' => 'PAINTING', 'item_code' => 'EXPLOSIONVENTPRIMER',   'item_name' => 'Explosion Vent Primer'],
+	['process_code' => 'PAINTING', 'item_code' => 'TANKMIO',    'item_name' => 'Tank MIO'],
+    ['process_code' => 'PAINTING', 'item_code' => 'CABLEBOXMIO',    'item_name' => 'Cable Box MIO'],
+    ['process_code' => 'PAINTING', 'item_code' => 'EXPLOSIONVENTMIO',   'item_name' => 'Explosion Vent MIO'],
+	['process_code' => 'PAINTING', 'item_code' => 'TANKPAINT',    'item_name' => 'Tank Paint'],
+    ['process_code' => 'PAINTING', 'item_code' => 'CABLEBOXPAINT',    'item_name' => 'Cable Box Paint'],
+    ['process_code' => 'PAINTING', 'item_code' => 'EXPLOSIONVENTPAINT',   'item_name' => 'Explosion Vent Paint'],
 
 ];
 

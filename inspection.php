@@ -221,6 +221,16 @@ $currentUserRole =
 $isAdmin =
     ($currentUserRole === 'admin');
 
+if (
+    $isAdmin
+    && empty($_SESSION['inspection_delete_token'])
+) {
+    $_SESSION['inspection_delete_token'] = bin2hex(random_bytes(32));
+}
+
+$inspectionDeleteToken =
+    $_SESSION['inspection_delete_token'] ?? '';
+
 
 /*
 |--------------------------------------------------------------------------
@@ -258,6 +268,12 @@ require 'includes/header.php';
          ===================================================== -->
 
     <?php require 'includes/job_header.php'; ?>
+
+    <?php if (isset($_GET['deleted'])): ?>
+        <div class="inspection-delete-success" role="status">
+            Inspection document deleted successfully.
+        </div>
+    <?php endif; ?>
 
 
     <!-- =====================================================
@@ -562,6 +578,33 @@ require 'includes/header.php';
                                             Replace
 
                                         </button>
+
+                                        <form
+                                            method="POST"
+                                            action="delete_inspection.php"
+                                            class="inspection-delete-form"
+                                            onsubmit="return confirm('Delete this inspection document permanently? This action cannot be undone.');"
+                                        >
+                                            <input
+                                                type="hidden"
+                                                name="document_id"
+                                                value="<?= (int)$document['id'] ?>"
+                                            >
+                                            <input
+                                                type="hidden"
+                                                name="delete_token"
+                                                value="<?= htmlspecialchars(
+                                                    $inspectionDeleteToken,
+                                                    ENT_QUOTES
+                                                ) ?>"
+                                            >
+                                            <button
+                                                type="submit"
+                                                class="button button-danger"
+                                            >
+                                                Delete
+                                            </button>
+                                        </form>
 
 
                                     <?php endif; ?>

@@ -8,6 +8,7 @@ if (!isset($_SESSION['user'])) {
 }
 
 require 'db.php';
+require_once 'includes/mailer.php';
 
 
 /*
@@ -576,6 +577,35 @@ $storedFileName =
                 */
 
                 $pdo->commit();
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Send Drawing Revision Notification
+                |--------------------------------------------------------------------------
+                */
+
+                try {
+
+                    sendDrawingRevisionNotification(
+                        $pdo,
+                        $drawingId,
+                        $revision
+                    );
+
+                } catch (Throwable $mailError) {
+
+                    /*
+                     * Revision upload must remain successful
+                     * even if email sending fails.
+                     */
+
+                    error_log(
+                        'Drawing revision notification email failed: '
+                        . $mailError->getMessage()
+                    );
+
+                }
 
 
                 /*
